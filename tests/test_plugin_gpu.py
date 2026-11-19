@@ -141,7 +141,9 @@ def test_build_backends_skips_a_constructor_that_raises(monkeypatch):
 
     monkeypatch.setattr(nvidia, "NvidiaGPU", boom)
     names = [type(b).__name__ for b in model._build_backends()]
-    assert names == ["AmdGPU", "IntelGPU", "ArmGPU"]
+    # WindowsGPU follows only on a Windows machine with an AMD or Intel adapter.
+    assert names[:3] == ["AmdGPU", "IntelGPU", "ArmGPU"]
+    assert "NvidiaGPU" not in names
 
 
 def test_intel_temperature_from_hwmon(tmp_path):

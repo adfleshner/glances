@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 from unittest.mock import mock_open
 
@@ -141,18 +142,49 @@ async def test_grab_stats_survives_sampler_failure(store, config, monkeypatch):
 
 
 def test_cpu_name_parses_proc_cpuinfo(monkeypatch):
+    monkeypatch.setattr("glances.plugins.quicklook.model.WINDOWS", False)
     data = "processor\t: 0\nmodel name\t: Test Chip 9000\nflags\t: fpu\n"
     monkeypatch.setattr("builtins.open", mock_open(read_data=data))
     assert _cpu_name() == "Test Chip 9000"
 
 
 def test_cpu_name_falls_back_on_oserror(monkeypatch):
+    monkeypatch.setattr("glances.plugins.quicklook.model.WINDOWS", False)
+
     def _boom(*args, **kwargs):
         raise OSError("snap confinement")
 
     monkeypatch.setattr("builtins.open", _boom)
     monkeypatch.setattr("platform.processor", lambda: "FallbackCPU")
     assert _cpu_name() == "FallbackCPU"
+
+
+def test_cpu_name_on_windows_reads_the_registry(monkeypatch):
+    monkeypatch.setattr("glances.plugins.quicklook.model.WINDOWS", True)
+    brand = "AMD Ryzen 5 5600X 6-Core Processor"
+    monkeypatch.setattr("glances.plugins.quicklook.model._windows_cpu_name", lambda: brand)
+    monkeypatch.setattr("platform.processor", lambda: "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD")
+    assert _cpu_name() == brand
+
+
+def test_cpu_name_on_windows_falls_back_when_registry_is_unreadable(monkeypatch):
+    monkeypatch.setattr("glances.plugins.quicklook.model.WINDOWS", True)
+    monkeypatch.setattr("glances.plugins.quicklook.model._windows_cpu_name", lambda: None)
+
+    def _boom(*args, **kwargs):
+        raise OSError("no /proc on Windows")
+
+    monkeypatch.setattr("builtins.open", _boom)
+    monkeypatch.setattr("platform.processor", lambda: "FallbackCPU")
+    assert _cpu_name() == "FallbackCPU"
+
+
+@pytest.mark.skipif(not sys.platform.startswith("win"), reason="Windows registry")
+def test_windows_cpu_name_reads_a_real_brand_string():
+    from glances.plugins.quicklook.model import _windows_cpu_name
+
+    name = _windows_cpu_name()
+    assert isinstance(name, str) and name
 
 
 def test_collect_sync_smoke():

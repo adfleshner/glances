@@ -38,6 +38,7 @@ from typing import Any, ClassVar
 import psutil
 
 from glances.cpu_sampler import sampler
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.plugins.plugin.thresholds import compute_level
@@ -49,10 +50,17 @@ _PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
 def _cpu_name() -> str:
     """Best-effort human CPU name.
 
-    Linux: first `model name` line of /proc/cpuinfo. Other OSes (or Snap
-    confinement blocking the open): fall back to `platform.processor()`.
-    The `open()` is inside try/except for Snap strict confinement.
+    Linux: first `model name` line of /proc/cpuinfo. Windows: the
+    `ProcessorNameString` registry value (what Task Manager shows), because
+    `platform.processor()` there is only "AMD64 Family 25 Model 33 ...".
+    Other OSes (or Snap confinement blocking the open): fall back to
+    `platform.processor()`. The `open()` is inside try/except for Snap
+    strict confinement.
     """
+    if WINDOWS:
+        name = _windows_cpu_name()
+        if name:
+            return name
     try:
         with open("/proc/cpuinfo") as f:
             for line in f:
@@ -61,6 +69,18 @@ def _cpu_name() -> str:
     except (OSError, IndexError):
         pass
     return platform.processor() or "CPU"
+
+
+def _windows_cpu_name() -> str | None:
+    """CPU brand string from the Windows registry, or None if unreadable."""
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as key:
+            value, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+    except OSError:
+        return None
+    return str(value).strip() or None
 
 
 def _collect_sync() -> dict[str, Any]:
