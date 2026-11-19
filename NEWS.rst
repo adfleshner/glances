@@ -205,6 +205,12 @@ Security (post-cutover audit of 2026-10-17):
   Glances); the unused ``system_exec`` helper and the ``uninstall.sh`` script
   (it needed the removed ``setup.py``; use ``pip uninstall glances``) are gone
 
+Enhancements:
+
+* Windows: the CPU name is the brand string Task Manager shows (for example
+  ``AMD Ryzen 5 5600X 6-Core Processor``) instead of
+  ``AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD``
+
 Special notes for package maintainers:
 
 * Minimal Python version is now 3.11 (Python 3.10 is end-of-life)
