@@ -8,7 +8,7 @@ For the moment, following GPU are supported:
 - NVidia (thanks to the `nvidia-ml-py`_ library)
 - NVidia Jetson / Tegra integrated GPU (NVML reports the device but not its
   telemetry, so usage and temperature are read from Tegra sysfs)
-- AMD (only on Linux Operating system with kernel 5.14 or higher)
+- AMD (Linux with kernel 5.14 or higher, and Windows)
 - Intel (only on Linux Operating system)
 - ARM (only on Linux Operating system with kernel 6.0 or higher;
   drivers: msm/Adreno, Panfrost, Panthor, v3d, Lima, Etnaviv)
@@ -19,6 +19,13 @@ refresh time. It displays:
 - GPU usage (NVidia, AMD and ARM) or frequency (Intel)
 - memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
 - temperature (if available)
+
+.. note::
+    On Windows, AMD GPUs are read from what Windows itself reports
+    (the sources Task Manager uses), with no vendor library: usage is the
+    busiest engine, memory is the dedicated memory in use, and temperature
+    needs Windows 10 2004 or later and a driver that reports it. The fan
+    speed is not available.
 
 .. note::
     For ``panthor`` and ``panfrost``, per-engine sampling

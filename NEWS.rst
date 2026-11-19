@@ -205,6 +205,11 @@ Security (post-cutover audit of 2026-10-17):
   Glances); the unused ``system_exec`` helper and the ``uninstall.sh`` script
   (it needed the removed ``setup.py``; use ``pip uninstall glances``) are gone
 
+Enhancements:
+
+* Windows: the GPU plugin reports AMD GPUs (name, usage, memory and
+  temperature), read from DXGI, the GPU performance counters and D3DKMT
+
 Special notes for package maintainers:
 
 * Minimal Python version is now 3.11 (Python 3.10 is end-of-life)

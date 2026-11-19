@@ -134,12 +134,13 @@ def test_stop_calls_every_backend_exit_even_if_one_raises(store, config):
 def test_build_backends_skips_a_constructor_that_raises(monkeypatch):
     """v5 form of v4's None backend: a vendor whose init fails is left out."""
     from glances.plugins.gpu import model
-    from glances.plugins.gpu.cards import nvidia
+    from glances.plugins.gpu.cards import amd_windows, nvidia
 
     def boom():
         raise RuntimeError("no driver")
 
     monkeypatch.setattr(nvidia, "NvidiaGPU", boom)
+    monkeypatch.setattr(amd_windows, "AmdWindowsGPU", boom)
     names = [type(b).__name__ for b in model._build_backends()]
     assert names == ["AmdGPU", "IntelGPU", "ArmGPU"]
 

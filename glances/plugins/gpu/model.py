@@ -44,11 +44,12 @@ def _build_backends() -> list:
     """
     backends: list = []
     from glances.plugins.gpu.cards.amd import AmdGPU
+    from glances.plugins.gpu.cards.amd_windows import AmdWindowsGPU
     from glances.plugins.gpu.cards.arm import ArmGPU
     from glances.plugins.gpu.cards.intel import IntelGPU
     from glances.plugins.gpu.cards.nvidia import NvidiaGPU
 
-    for cls in (NvidiaGPU, AmdGPU, IntelGPU, ArmGPU):
+    for cls in (NvidiaGPU, AmdGPU, IntelGPU, ArmGPU, AmdWindowsGPU):
         try:
             backends.append(cls())
         except Exception as exc:  # noqa: BLE001 — any driver/lib error → skip vendor
