@@ -126,10 +126,14 @@ def memory_used_by_luid(samples: dict[str, float]) -> dict[str, int]:
 
 
 def memory_percent(used: int | None, total: int) -> int | None:
-    """Return the memory consumption in %, or None when unknown."""
+    """Return the memory consumption in %, or None when unknown.
+
+    Capped at 100: an integrated GPU (APU) has only a small dedicated
+    carve-out and Windows can count more than that as dedicated usage.
+    """
     if used is None or total <= 0:
         return None
-    return round(used / total * 100)
+    return min(round(used / total * 100), 100)
 
 
 # --- DXGI: the adapter list -------------------------------------------------

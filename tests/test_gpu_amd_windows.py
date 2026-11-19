@@ -51,7 +51,13 @@ def test_memory_used_by_luid_reads_adapter_memory_instances():
 
 @pytest.mark.parametrize(
     ('used', 'total', 'expected'),
-    [(5341937664, 12836900864, 42), (None, 12836900864, None), (100, 0, None)],
+    [
+        (5341937664, 12836900864, 42),
+        (None, 12836900864, None),
+        (100, 0, None),
+        # APU: 512 MiB carve-out, more than that counted as dedicated usage
+        (805306368, 536870912, 100),
+    ],
 )
 def test_memory_percent(used, total, expected):
     assert windows.memory_percent(used, total) == expected
