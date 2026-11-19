@@ -28,6 +28,7 @@ from glances.plugins.gpu.cards.amd import AmdGPU
 from glances.plugins.gpu.cards.arm import ArmGPU
 from glances.plugins.gpu.cards.intel import IntelGPU
 from glances.plugins.gpu.cards.nvidia import NvidiaGPU
+from glances.plugins.gpu.cards.windows import WindowsGPU
 from glances.plugins.plugin.model import GlancesPluginModel
 
 # Fields description
@@ -121,6 +122,13 @@ class GpuPlugin(GlancesPluginModel):
         #     proc_root_folder='./tests-data/plugins/gpu/arm/proc',
         # )
 
+        # Init the Windows GPU API (AMD and Intel adapters on Windows)
+        try:
+            self.windows = WindowsGPU()
+        except Exception as e:
+            logger.debug(f'Windows GPU initialization error: {e}')
+            self.windows = None
+
         # We want to display the stat in the curse interface
         self.display_curse = True
 
@@ -135,6 +143,8 @@ class GpuPlugin(GlancesPluginModel):
             self.intel.exit()
         if self.arm:
             self.arm.exit()
+        if self.windows:
+            self.windows.exit()
         # Call the father exit method
         super().exit()
 
@@ -158,6 +168,8 @@ class GpuPlugin(GlancesPluginModel):
             stats.extend(self.intel.get_device_stats())
         if self.arm:
             stats.extend(self.arm.get_device_stats())
+        if self.windows:
+            stats.extend(self.windows.get_device_stats())
 
         # !!!
         # Uncomment to test on computer without Nvidia GPU

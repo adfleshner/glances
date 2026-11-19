@@ -13,8 +13,21 @@ from typing import TypedDict
 
 import psutil
 
+from glances.globals import WINDOWS
 from glances.logger import logger
 from glances.timer import Timer
+
+
+def windows_cpu_name() -> str | None:
+    """CPU brand string from the Windows registry, or None if unreadable."""
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as key:
+            value, _ = winreg.QueryValueEx(key, 'ProcessorNameString')
+    except OSError:
+        return None
+    return str(value).strip() or None
 
 __all__ = ["cpu_percent"]
 
@@ -267,6 +280,12 @@ class CpuPercent:
 
     @staticmethod
     def __get_cpu_name() -> str:
+        # On Windows, platform.processor() is only "AMD64 Family 25 Model 33 ...":
+        # read the brand string Task Manager shows from the registry instead
+        if WINDOWS:
+            name = windows_cpu_name()
+            if name:
+                return name
         # Get the CPU name once from the /proc/cpuinfo file
         # Read the first line with the "model name" ("Model" for Raspberry Pi)
         ret = f'CPU {platform.processor()}'
